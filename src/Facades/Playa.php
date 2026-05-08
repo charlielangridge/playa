@@ -2,15 +2,16 @@
 
 namespace CharlieLangridge\Playa\Facades;
 
+use CharlieLangridge\Playa\Playa as PlayaManager;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @see \CharlieLangridge\Playa\Playa
+ * @see PlayaManager
  */
 class Playa extends Facade
 {
     protected static function getFacadeAccessor(): string
     {
-        return \CharlieLangridge\Playa\Playa::class;
+        return PlayaManager::class;
     }
 }
