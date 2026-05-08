@@ -1,12 +1,12 @@
 <?php
 
-namespace VendorName\Skeleton\Commands;
+namespace charlielangridge\Playa\Commands;
 
 use Illuminate\Console\Command;
 
-class SkeletonCommand extends Command
+class PlayaCommand extends Command
 {
-    public $signature = 'skeleton';
+    public $signature = 'playa';
 
     public $description = 'My command';
 
