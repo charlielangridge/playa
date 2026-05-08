@@ -1,25 +1,39 @@
 <?php
 
-namespace charlielangridge\Playa;
+namespace CharlieLangridge\Playa;
 
+use CharlieLangridge\Playa\Commands\PrunePlayersCommand;
+use CharlieLangridge\Playa\Http\Middleware\EnsurePlayer;
+use CharlieLangridge\Playa\Models\Player;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Router;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use charlielangridge\Playa\Commands\PlayaCommand;
 
 class PlayaServiceProvider extends PackageServiceProvider
 {
     public function configurePackage(Package $package): void
     {
-        /*
-         * This class is a Package Service Provider
-         *
-         * More info: https://github.com/spatie/laravel-package-tools
-         */
         $package
             ->name('playa')
             ->hasConfigFile()
-            ->hasViews()
-            ->hasMigration('create_playa_table')
-            ->hasCommand(PlayaCommand::class);
+            ->hasMigration('create_playa_players_table')
+            ->hasCommand(PrunePlayersCommand::class);
+    }
+
+    public function packageRegistered(): void
+    {
+        $this->app->singleton(Playa::class);
+    }
+
+    public function packageBooted(): void
+    {
+        $this->app->make(Router::class)->aliasMiddleware('playa', EnsurePlayer::class);
+
+        Request::macro('player', function (): ?Player {
+            $player = $this->attributes->get('playa.player');
+
+            return $player instanceof Player ? $player : null;
+        });
     }
 }

@@ -1,16 +1,16 @@
 <?php
 
-namespace charlielangridge\Playa\Facades;
+namespace CharlieLangridge\Playa\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @see \charlielangridge\Playa\Playa
+ * @see \CharlieLangridge\Playa\Playa
  */
 class Playa extends Facade
 {
     protected static function getFacadeAccessor(): string
     {
-        return \charlielangridge\Playa\Playa::class;
+        return \CharlieLangridge\Playa\Playa::class;
     }
 }

@@ -1,5 +1,5 @@
 <?php
 
-use charlielangridge\Playa\Tests\TestCase;
+use CharlieLangridge\Playa\Tests\TestCase;
 
 uses(TestCase::class)->in(__DIR__);

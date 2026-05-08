@@ -1,6 +1,6 @@
 {
     "name": "charlielangridge/playa",
-    "description": "A Laravel package is used to create cookie based players that can be used as temporary users for your package",
+    "description": "Create temporary cookie-backed players for Laravel applications.",
     "keywords": [
         "Charlie Langridge",
         "laravel",
@@ -34,13 +34,13 @@
     },
     "autoload": {
         "psr-4": {
-            "charlielangridge\\Playa\\": "src/",
-            "charlielangridge\\Playa\\Database\\Factories\\": "database/factories/"
+            "CharlieLangridge\\Playa\\": "src/",
+            "CharlieLangridge\\Playa\\Database\\Factories\\": "database/factories/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "charlielangridge\\Playa\\Tests\\": "tests/",
+            "CharlieLangridge\\Playa\\Tests\\": "tests/",
             "Workbench\\App\\": "workbench/app/"
         }
     },
@@ -62,10 +62,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "charlielangridge\\Playa\\PlayaServiceProvider"
+                "CharlieLangridge\\Playa\\PlayaServiceProvider"
             ],
             "aliases": {
-                "Playa": "charlielangridge\\Playa\\Facades\\Playa"
+                "Playa": "CharlieLangridge\\Playa\\Facades\\Playa"
             }
         }
     },

@@ -1,0 +1,30 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create(config('playa.table_name', 'playa_players'), function (Blueprint $table) {
+            $table->id();
+            $table->uuid('uuid')->unique();
+
+            match (config('playa.user_id_type', 'bigint')) {
+                'uuid' => $table->uuid('user_id')->nullable()->index(),
+                'ulid' => $table->ulid('user_id')->nullable()->index(),
+                'string' => $table->string('user_id')->nullable()->index(),
+                default => $table->unsignedBigInteger('user_id')->nullable()->index(),
+            };
+
+            $table->string('name')->nullable();
+            $table->string('username')->nullable()->index();
+            $table->json('data')->nullable();
+            $table->timestamp('last_seen_at')->nullable()->index();
+            $table->timestamp('expires_at')->nullable()->index();
+            $table->timestamps();
+        });
+    }
+};
