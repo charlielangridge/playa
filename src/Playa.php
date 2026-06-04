@@ -7,6 +7,7 @@ use CharlieLangridge\Playa\Events\PlayerExpired;
 use CharlieLangridge\Playa\Events\PlayerRenewed;
 use CharlieLangridge\Playa\Events\PlayerResolved;
 use CharlieLangridge\Playa\Models\Player;
+use CharlieLangridge\Playa\Support\PlayerModel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -59,7 +60,11 @@ class Playa
         $attributes['last_seen_at'] ??= Carbon::now();
         $attributes['expires_at'] ??= $this->expiresAt();
 
-        $player = Player::query()->create($attributes);
+        $player = PlayerModel::query()->create($attributes);
+
+        if (! $player instanceof Player) {
+            throw new \RuntimeException('The configured Playa player model must extend '.Player::class.'.');
+        }
 
         PlayerCreated::dispatch($player);
 
@@ -72,9 +77,11 @@ class Playa
             return null;
         }
 
-        return Player::query()
+        $player = PlayerModel::query()
             ->where('uuid', $uuid)
             ->first();
+
+        return $player instanceof Player ? $player : null;
     }
 
     public function forget(): SymfonyCookie

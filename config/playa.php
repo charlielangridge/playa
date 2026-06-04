@@ -1,10 +1,18 @@
 <?php
 
+use CharlieLangridge\Playa\Models\Player;
+
 return [
     /*
      * The table used by the package migration and Player model.
      */
     'table_name' => 'playa_players',
+
+    /*
+     * The Eloquent model class used for player records. Configure this with
+     * an application model that extends CharlieLangridge\Playa\Models\Player.
+     */
+    'player_model' => Player::class,
 
     /*
      * The maximum lifetime of a player identity in minutes.

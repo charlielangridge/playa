@@ -111,6 +111,33 @@ $player->update([
 
 Playa does not ship profile routes or forms. Build those in your application so validation, copy, and consent match the flow you are building.
 
+## Extending The Player Model
+
+If your application needs player-specific relationships, casts, scopes, or helpers, create an application model that extends Playa's model:
+
+```php
+namespace App\Models;
+
+use CharlieLangridge\Playa\Models\Player as PlayaPlayer;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class Player extends PlayaPlayer
+{
+    public function team(): BelongsTo
+    {
+        return $this->belongsTo(Team::class);
+    }
+}
+```
+
+Then configure Playa to use it:
+
+```php
+'player_model' => App\Models\Player::class,
+```
+
+The configured model must extend `CharlieLangridge\Playa\Models\Player`. Add any extra columns, such as `team_id`, in your application's own migrations.
+
 ## Linking A Player To A User
 
 Players can be linked to your app's user model without becoming authenticated users themselves.
@@ -176,6 +203,8 @@ The published config looks like this:
 ```php
 return [
     'table_name' => 'playa_players',
+
+    'player_model' => CharlieLangridge\Playa\Models\Player::class,
 
     'lifetime_minutes' => 60 * 24 * 30,
 
