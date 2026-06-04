@@ -2,7 +2,7 @@
 
 namespace CharlieLangridge\Playa\Commands;
 
-use CharlieLangridge\Playa\Models\Player;
+use CharlieLangridge\Playa\Support\PlayerModel;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 
@@ -16,7 +16,7 @@ class PrunePlayersCommand extends Command
     {
         $hours = max(0, (int) $this->option('hours'));
 
-        $deleted = Player::query()
+        $deleted = PlayerModel::query()
             ->whereNotNull('expires_at')
             ->where('expires_at', '<=', Carbon::now()->subHours($hours))
             ->delete();
