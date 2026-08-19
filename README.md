@@ -345,6 +345,10 @@ Format the code:
 composer format
 ```
 
+Playa is an open-source Laravel package [created and maintained by Ganda Studio](https://ganda.studio).
+
+[Read the Ganda Studio case study.](https://ganda.studio/results/playa)
+
 ## Changelog
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
