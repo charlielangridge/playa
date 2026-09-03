@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.1 - 2026-09-03
+
+- Treat players loaded before the persistence-policy migration as rolling identities.
+
 All notable changes to `playa` will be documented in this file.
 
 ## Playa v0.4.0 - 2026-09-03

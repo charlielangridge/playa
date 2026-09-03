@@ -46,7 +46,7 @@ class Playa
             return $this->createForRequest($request, $requestedPolicy ?? $this->defaultPolicy());
         }
 
-        if ($requestedPolicy === IdentityPolicy::Rolling && $player->persistence_policy === IdentityPolicy::Session) {
+        if ($requestedPolicy === IdentityPolicy::Rolling && $this->policyFor($player) === IdentityPolicy::Session) {
             $player->forceFill([
                 'persistence_policy' => IdentityPolicy::Rolling,
                 'expires_at' => $this->expiresAt(IdentityPolicy::Rolling),
@@ -174,13 +174,15 @@ class Playa
             'last_seen_at' => Carbon::now(),
         ];
 
-        if ($this->renewsOnVisit($player->persistence_policy)) {
-            $attributes['expires_at'] = $this->expiresAt($player->persistence_policy);
+        $policy = $this->policyFor($player);
+
+        if ($this->renewsOnVisit($policy)) {
+            $attributes['expires_at'] = $this->expiresAt($policy);
         }
 
         $player->forceFill($attributes)->save();
 
-        if ($this->renewsOnVisit($player->persistence_policy)) {
+        if ($this->renewsOnVisit($policy)) {
             PlayerRenewed::dispatch($player);
         }
     }
@@ -224,8 +226,9 @@ class Playa
 
     protected function cookieLifetimeMinutes(Player $player): int
     {
+        $policy = $this->policyFor($player);
         $configuredLifetime = config(
-            'playa.policies.'.$player->persistence_policy->value.'.cookie_lifetime_minutes',
+            'playa.policies.'.$policy->value.'.cookie_lifetime_minutes',
             config('playa.cookie.lifetime_minutes'),
         );
 
@@ -240,7 +243,7 @@ class Playa
         }
 
         return (int) (config(
-            'playa.policies.'.$player->persistence_policy->value.'.lifetime_minutes',
+            'playa.policies.'.$policy->value.'.lifetime_minutes',
             config('playa.lifetime_minutes'),
         ) ?? 0);
     }
@@ -257,6 +260,11 @@ class Playa
         }
 
         return IdentityPolicy::tryFrom((string) $policy) ?? $this->defaultPolicyFallback();
+    }
+
+    protected function policyFor(Player $player): IdentityPolicy
+    {
+        return $this->policyFrom($player->getAttribute('persistence_policy'));
     }
 
     protected function defaultPolicyFallback(): IdentityPolicy

@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 
 function registerPlayerRoute(string $uri = 'playa-test'): void
 {
@@ -73,6 +74,21 @@ it('resolves and renews an existing player from a valid cookie', function () {
 
     Event::assertDispatched(PlayerResolved::class);
     Event::assertDispatched(PlayerRenewed::class);
+});
+
+it('treats players from a pre-migration schema as rolling identities', function () {
+    $player = Player::factory()->create();
+    Schema::table('playa_players', function ($table): void {
+        $table->dropIndex(['persistence_policy']);
+        $table->dropColumn('persistence_policy');
+    });
+    registerPlayerRoute();
+
+    $this->withCookie('playa_player', $player->uuid)
+        ->get('playa-test')
+        ->assertOk()
+        ->assertJsonPath('request_uuid', $player->uuid)
+        ->assertCookie('playa_player');
 });
 
 it('replaces invalid player cookies with a new player', function () {
