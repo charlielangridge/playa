@@ -92,6 +92,23 @@ $player = Playa::create([
 ]);
 ```
 
+Read an existing, active cookie identity without creating, renewing, or attaching it to the request:
+
+```php
+$player = Playa::findExisting($request);
+```
+
+Choose a persistence policy when identity should only be created after application validation succeeds:
+
+```php
+use CharlieLangridge\Playa\IdentityPolicy;
+
+$player = Playa::resolve($request, IdentityPolicy::Session);
+$player = Playa::resolve($request, IdentityPolicy::Rolling);
+```
+
+Session identities use a browser-session cookie and keep their original server expiry. Rolling identities use the configured persistent lifetime and renew on visits. Requesting Rolling upgrades an existing Session identity without changing its UUID; requesting Session never downgrades an existing Rolling identity.
+
 ## Storing Player Details
 
 The `Player` model has first-class `name` and `username` columns, plus a `data` JSON column for application-specific details.
@@ -209,6 +226,17 @@ return [
     'lifetime_minutes' => 60 * 24 * 30,
 
     'renew_on_visit' => true,
+
+    'default_policy' => 'rolling',
+
+    'policies' => [
+        'session' => [
+            'lifetime_minutes' => 60 * 24,
+            'renew_on_visit' => false,
+            'cookie_lifetime_minutes' => 0,
+        ],
+        'rolling' => [],
+    ],
 
     'cookie' => [
         'name' => 'playa_player',

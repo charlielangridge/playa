@@ -26,24 +26,31 @@ class Playa
         return $this->currentPlayer;
     }
 
-    public function resolve(Request $request): Player
+    public function resolve(Request $request, ?IdentityPolicy $requestedPolicy = null): Player
     {
         $uuid = $request->cookies->get($this->cookieName());
 
         if (! is_string($uuid) || ! Str::isUuid($uuid)) {
-            return $this->createForRequest($request);
+            return $this->createForRequest($request, $requestedPolicy ?? $this->defaultPolicy());
         }
 
         $player = $this->findByUuid($uuid);
 
         if (! $player) {
-            return $this->createForRequest($request);
+            return $this->createForRequest($request, $requestedPolicy ?? $this->defaultPolicy());
         }
 
         if ($player->isExpired()) {
             PlayerExpired::dispatch($player);
 
-            return $this->createForRequest($request);
+            return $this->createForRequest($request, $requestedPolicy ?? $this->defaultPolicy());
+        }
+
+        if ($requestedPolicy === IdentityPolicy::Rolling && $player->persistence_policy === IdentityPolicy::Session) {
+            $player->forceFill([
+                'persistence_policy' => IdentityPolicy::Rolling,
+                'expires_at' => $this->expiresAt(IdentityPolicy::Rolling),
+            ])->save();
         }
 
         $this->remember($request, $player);
@@ -57,8 +64,10 @@ class Playa
 
     public function create(array $attributes = []): Player
     {
+        $policy = $this->policyFrom($attributes['persistence_policy'] ?? null);
+        $attributes['persistence_policy'] = $policy;
         $attributes['last_seen_at'] ??= Carbon::now();
-        $attributes['expires_at'] ??= $this->expiresAt();
+        $attributes['expires_at'] ??= $this->expiresAt($policy);
 
         $player = PlayerModel::query()->create($attributes);
 
@@ -82,6 +91,19 @@ class Playa
             ->first();
 
         return $player instanceof Player ? $player : null;
+    }
+
+    public function findExisting(Request $request): ?Player
+    {
+        $uuid = $request->cookies->get($this->cookieName());
+
+        if (! is_string($uuid)) {
+            return null;
+        }
+
+        $player = $this->findByUuid($uuid);
+
+        return $player && ! $player->isExpired() ? $player : null;
     }
 
     public function forget(): SymfonyCookie
@@ -126,9 +148,9 @@ class Playa
         return (string) config('playa.cookie.name', 'playa_player');
     }
 
-    protected function createForRequest(Request $request): Player
+    protected function createForRequest(Request $request, IdentityPolicy $policy): Player
     {
-        $player = $this->create();
+        $player = $this->create(['persistence_policy' => $policy]);
 
         $this->remember($request, $player);
         $this->linkAuthenticatedUser($request, $player);
@@ -152,13 +174,13 @@ class Playa
             'last_seen_at' => Carbon::now(),
         ];
 
-        if ($this->renewsOnVisit()) {
-            $attributes['expires_at'] = $this->expiresAt();
+        if ($this->renewsOnVisit($player->persistence_policy)) {
+            $attributes['expires_at'] = $this->expiresAt($player->persistence_policy);
         }
 
         $player->forceFill($attributes)->save();
 
-        if ($this->renewsOnVisit()) {
+        if ($this->renewsOnVisit($player->persistence_policy)) {
             PlayerRenewed::dispatch($player);
         }
     }
@@ -178,9 +200,12 @@ class Playa
         $player->linkUser($user);
     }
 
-    protected function expiresAt(): ?Carbon
+    protected function expiresAt(IdentityPolicy $policy): ?Carbon
     {
-        $lifetime = config('playa.lifetime_minutes');
+        $lifetime = config(
+            'playa.policies.'.$policy->value.'.lifetime_minutes',
+            config('playa.lifetime_minutes'),
+        );
 
         if ($lifetime === null) {
             return null;
@@ -189,14 +214,20 @@ class Playa
         return Carbon::now()->addMinutes((int) $lifetime);
     }
 
-    protected function renewsOnVisit(): bool
+    protected function renewsOnVisit(IdentityPolicy $policy): bool
     {
-        return (bool) config('playa.renew_on_visit', true);
+        return (bool) config(
+            'playa.policies.'.$policy->value.'.renew_on_visit',
+            config('playa.renew_on_visit', true),
+        );
     }
 
     protected function cookieLifetimeMinutes(Player $player): int
     {
-        $configuredLifetime = config('playa.cookie.lifetime_minutes');
+        $configuredLifetime = config(
+            'playa.policies.'.$player->persistence_policy->value.'.cookie_lifetime_minutes',
+            config('playa.cookie.lifetime_minutes'),
+        );
 
         if ($configuredLifetime !== null) {
             return (int) $configuredLifetime;
@@ -208,7 +239,29 @@ class Playa
             return max(1, (int) ceil($secondsUntilExpiry / 60));
         }
 
-        return (int) (config('playa.lifetime_minutes') ?? 0);
+        return (int) (config(
+            'playa.policies.'.$player->persistence_policy->value.'.lifetime_minutes',
+            config('playa.lifetime_minutes'),
+        ) ?? 0);
+    }
+
+    protected function defaultPolicy(): IdentityPolicy
+    {
+        return $this->policyFrom(config('playa.default_policy', IdentityPolicy::Rolling->value));
+    }
+
+    protected function policyFrom(mixed $policy): IdentityPolicy
+    {
+        if ($policy instanceof IdentityPolicy) {
+            return $policy;
+        }
+
+        return IdentityPolicy::tryFrom((string) $policy) ?? $this->defaultPolicyFallback();
+    }
+
+    protected function defaultPolicyFallback(): IdentityPolicy
+    {
+        return IdentityPolicy::Rolling;
     }
 
     protected function cookiePath(): string

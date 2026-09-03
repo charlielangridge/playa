@@ -4,6 +4,7 @@ namespace CharlieLangridge\Playa\Models;
 
 use CharlieLangridge\Playa\Database\Factories\PlayerFactory;
 use CharlieLangridge\Playa\Events\PlayerLinkedToUser;
+use CharlieLangridge\Playa\IdentityPolicy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,6 +15,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property string $uuid
  * @property int|string|null $user_id
+ * @property IdentityPolicy $persistence_policy
  * @property Carbon|null $expires_at
  */
 class Player extends Model
@@ -26,6 +28,7 @@ class Player extends Model
         'user_id',
         'name',
         'username',
+        'persistence_policy',
         'data',
         'last_seen_at',
         'expires_at',
@@ -111,6 +114,7 @@ class Player extends Model
     {
         return [
             'data' => 'array',
+            'persistence_policy' => IdentityPolicy::class,
             'last_seen_at' => 'datetime',
             'expires_at' => 'datetime',
         ];

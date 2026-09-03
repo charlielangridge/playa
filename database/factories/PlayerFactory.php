@@ -2,6 +2,7 @@
 
 namespace CharlieLangridge\Playa\Database\Factories;
 
+use CharlieLangridge\Playa\IdentityPolicy;
 use CharlieLangridge\Playa\Models\Player;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Carbon;
@@ -15,6 +16,7 @@ class PlayerFactory extends Factory
         return [
             'name' => $this->faker->name(),
             'username' => $this->faker->unique()->userName(),
+            'persistence_policy' => IdentityPolicy::Rolling,
             'data' => [],
             'last_seen_at' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(30),

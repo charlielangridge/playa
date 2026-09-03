@@ -18,6 +18,7 @@ class PlayaServiceProvider extends PackageServiceProvider
             ->name('playa')
             ->hasConfigFile()
             ->hasMigration('create_playa_players_table')
+            ->hasMigration('add_persistence_policy_to_playa_players_table')
             ->hasCommand(PrunePlayersCommand::class);
     }
 

@@ -29,6 +29,22 @@ return [
     'renew_on_visit' => true,
 
     /*
+     * Request-scoped identity policies. Rolling preserves Playa's historical
+     * lifetime and renewal defaults, while Session is fixed and browser-only.
+     */
+    'default_policy' => 'rolling',
+
+    'policies' => [
+        'session' => [
+            'lifetime_minutes' => 60 * 24,
+            'renew_on_visit' => false,
+            'cookie_lifetime_minutes' => 0,
+        ],
+        // Rolling inherits the package's historical top-level settings.
+        'rolling' => [],
+    ],
+
+    /*
      * Playa stores only the player's UUID on the device. Keep http_only
      * enabled unless your application has a specific reason to read this
      * value from JavaScript.

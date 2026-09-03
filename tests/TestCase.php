@@ -50,5 +50,6 @@ class TestCase extends Orchestra
         });
 
         (include __DIR__.'/../database/migrations/create_playa_players_table.php.stub')->up();
+        (include __DIR__.'/../database/migrations/add_persistence_policy_to_playa_players_table.php.stub')->up();
     }
 }
